@@ -193,7 +193,7 @@ trained on the 314 full-task episodes alone. Resolving that schema incompatibili
 highest-leverage fix available, since the missing data is exactly the pickup-state coverage the
 model needs.
 
-## Future additions
+## Future work
 
 - **Combined-corpus training.** Fix the dataset schema mismatch and train SmolVLA on all 499
   episodes rather than 314.
