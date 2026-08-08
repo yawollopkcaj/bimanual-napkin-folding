@@ -100,15 +100,27 @@ SmolVLA's pretrained vision-language backbone yields richer observation features
 disambiguate the transition, which is why it works at all. Its 70% ceiling shows that better
 representations alone do not fully resolve stage composition.
 
-<img src="assets/loss.png" width="460" alt="ACT training loss over 100k gradient steps on log-log axes, decreasing smoothly and monotonically">
+<img src="assets/loss.png" width="620" alt="Training loss on log-log axes for ten runs, every one descending smoothly from roughly 50 down to between 0.05 and 0.3 across 200k gradient steps">
 
-**The loss-curve trap.** ACT's training loss decreased smoothly and monotonically over 100k
-gradient steps with no divergence, and extending to 200k produced no further meaningful reduction.
-That curve is exactly what a healthy, converged model looks like, and the policy still succeeds on
-0% of trials. Behavior-cloning loss measures prediction error on demonstrated chunks, not task
-success. A converged loss is fully consistent with catastrophic end-to-end failure when the failure
-is one of composition rather than representation. Task-level evaluation, not loss, has to gate
-progress.
+*Training loss, log-log. Gradient step on the x axis (100 to 200k), behavior-cloning loss on the y.
+Each line is one training run logged during ACT development. Two are explicitly labeled
+`act-baseline`; the rest carry Weights & Biases auto-generated names (`copper-fire-5`,
+`vivid-pine-12`, `cinnamon-tart-7` and so on) that are assigned at random and encode nothing about
+their configuration. The lines that stop early are runs terminated before completion, mostly within
+the first few thousand steps. Four ran the full distance and finished between roughly 0.05 and 0.3.
+The figure is not here to single out a winner. It is here because every single one of them descends
+smoothly.*
+
+**The loss-curve trap.** Every run converges. Loss falls monotonically across nearly three orders
+of magnitude with no divergence and no instability, and pushing the longest run out to 200k
+gradient steps produced no further meaningful reduction. This is exactly what a healthy, well-tuned
+training pipeline is supposed to look like, and the full-task ACT policy it produced still succeeds
+on 0% of trials. Lower loss did not buy task success either: the run that converged furthest is not
+a better folder. Behavior-cloning loss measures prediction error on demonstrated action chunks, not
+task success, so a converged loss is fully consistent with catastrophic end-to-end failure when the
+failure is one of composition rather than representation. Task-level evaluation, not loss, has to
+gate progress. That is the practical lesson from this project: if the team had trusted these curves,
+they would have concluded the model was fine.
 
 <img src="assets/completed_fold.jpeg" width="460" alt="Overhead view of a completed fold: clean diagonal crease with aligned corners">
 
