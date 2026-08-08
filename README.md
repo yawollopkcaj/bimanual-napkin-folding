@@ -205,6 +205,12 @@ This was a seven-person team project. My work concentrated on two areas:
 **Dataset and teleoperation**
 - Collected the teleoperation dataset across 3 synchronized camera views.
 - Applied Stage-Aware Reward Modeling (SARM) annotation to improve data quality.
+  <!-- TODO (Jack): verify or cut this line. The paper lists SARM only under future work
+       ("Paths to closing the gap"), citing Chen et al. It does not describe SARM annotation
+       as having been applied to the dataset. Anyone who reads the paper alongside this page
+       will see the mismatch. If you did the annotation work outside what the paper reports,
+       say what it produced; otherwise this should come out. -->
+
 
 **Also**
 - Identified and patched two bugs in the upstream LeRobot codebase.
