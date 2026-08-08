@@ -155,11 +155,6 @@ motion turns jerky and unresponsive. We replaced it with a custom inference path
 camera frames straight to the GPU, where the policy's own vision encoder does preprocessing inside
 the forward pass. That eliminated the bottleneck and restored the target 30 Hz control loop.
 
-<img src="assets/actloop.png" width="620" alt="The seven-step ACT inference loop: observe, process, frame, policy inference on GPU with temporal ensembling, convert, send over USB serial, and precise-sleep timing at 30 fps">
-
-*The resulting loop. Step 2's `obs_processor` normalizes joints only; image normalization moved
-into step 4, inside the box marked GPU. That split is the fix.*
-
 ## Data and training
 
 **Dataset.** 499 episodes and 544,906 synchronized frames, collected by kinesthetic teleoperation:
@@ -198,7 +193,7 @@ trained on the 314 full-task episodes alone. Resolving that schema incompatibili
 highest-leverage fix available, since the missing data is exactly the pickup-state coverage the
 model needs.
 
-## Where it goes next
+## Future additions
 
 - **Combined-corpus training.** Fix the dataset schema mismatch and train SmolVLA on all 499
   episodes rather than 314.
@@ -207,8 +202,6 @@ model needs.
   meta-controller sequencing them. That converts the sparse binary task reward into a dense signal,
   which is a prerequisite for RL fine-tuning on top of an imitation-learned initialization and a
   principled remedy for the composition failure above.
-- **Flow-matching policies.** These would let the temporal-ensembling and scheduling refinements
-  developed for ACT transfer naturally to the VLA training loop.
 - **A continuous fold-quality metric.** Fold quality is currently scored only as binary
   success/failure. A vision-based continuous metric would provide gradient information for both
   evaluation and RL fine-tuning.
@@ -234,7 +227,7 @@ This was a seven-person team project. My work concentrated on two areas:
   [`linique-v2-fold-pickup`](https://huggingface.co/datasets/jhimmens/linique-v2-fold-pickup) on
   the Hugging Face Hub.
 
-## Open release: take the data and the weights
+## Open source contribution 
 
 Real bimanual cloth-manipulation data is scarce, and it is the expensive part of this kind of
 project: roughly five hours of a human driving leader arms, one napkin at a time. All of it is
