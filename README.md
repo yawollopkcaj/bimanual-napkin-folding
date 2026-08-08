@@ -7,7 +7,7 @@
 > **Everything is public.** 499 episodes and ~545k frames of real bimanual cloth manipulation,
 > plus the trained policy weights, released on the Hugging Face Hub in standard LeRobot format
 > under Apache-2.0.
-> [Jump to the release ↓](#open-source-contributions)
+> [Jump to the open source ↓](#open-source-contributions)
 
 <img src="assets/prototype.jpeg" width="520" alt="The bimanual napkin folding rig: two SO-101 follower arms on a hardboard base, overhead camera gantry, leader arms in the foreground">
 
