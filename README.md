@@ -15,27 +15,28 @@
 
 ## What it does
 
-Two 6-DOF [SO-101](https://github.com/TheRobotStudio/SO-ARM100) arms and a three-camera RGB stack
-learn decorative napkin folding entirely from human teleoperation demonstrations, running on the
-open-source [LeRobot](https://github.com/huggingface/lerobot) framework.
+Two 6-DOF [SO-101](https://github.com/TheRobotStudio/SO-ARM100) arms and three RGB cameras learn to
+fold a linen napkin from human teleoperation, running on
+[LeRobot](https://github.com/huggingface/lerobot).
 
-Cloth is the hard case in manipulation. A rigid object has six degrees of freedom; a napkin has
+Cloth is the hard case in manipulation. A rigid object has six degrees of freedom. A napkin has
 effectively infinite, and linen's dynamics depend on weave, weight, and finish in ways current
-physics engines do not reproduce. The usual recipe of training a policy in simulation with RL and
-transferring it to hardware is unavailable here, because the sim-to-real gap for cloth is
-prohibitive. So every policy in this system is learned directly from real demonstrations on real
-cloth.
+physics engines do not reproduce. That kills the standard recipe, which is to train a policy in
+simulation with RL and transfer it to hardware. The sim-to-real gap for cloth is too wide to cross.
+So every policy here is learned directly from real demonstrations on real cloth.
 
-The task is narrow on purpose: premium hospitality venues spend one to three hours of paid staff
-time per day on decorative folding, which makes it a real workload with a bounded perception and
-workspace problem.
+The task is narrow on purpose. Premium hospitality venues spend one to three hours of paid staff
+time a day on decorative folding, so it is a real workload, and it bounds the perception and
+workspace problem to a table.
 
 ## Results
 
-The system was benchmarked against operationally derived deployment requirements, then run for 20
-autonomous trials per policy on a freshly ironed 20"×20" linen napkin placed in a randomized
-workspace position. A trial counted as a success only if it met *both* the cycle-time and
-edge-accuracy thresholds.
+We set the bar at 80% first-attempt success and did not clear it. The best policy folds 70% of the
+time.
+
+The bench test mirrors the deployment requirement: a freshly ironed 20"×20" linen napkin, placed
+flat in a randomized workspace position, 20 trials per policy. A trial counts as a success only if
+it meets *both* the cycle-time and edge-accuracy thresholds.
 
 | Requirement | Target | SmolVLA achieved |
 |---|---|---|
@@ -49,18 +50,18 @@ edge-accuracy thresholds.
 | **SmolVLA** (450M VLA) [🤗 weights](https://huggingface.co/jhimmens/smolvla-napkin-fold) | 14 / 20 | **70%** | 40.2 s | 6 mm |
 | **ACT** (Action-Chunking Transformer), identical data | 0 / 20 | **0%** | n/a | n/a |
 
-SmolVLA cleared the speed and accuracy budgets with margin but missed the 80% deployment
-threshold. Five of its six failures were unsuccessful initial grasps and one was a mid-fold slip,
-which puts grasp acquisition, not folding, on the critical path.
+SmolVLA cleared the speed and accuracy budgets with room to spare and missed the success threshold.
+Five of its six failures were bad initial grasps and one was a mid-fold slip. Grasp acquisition is
+on the critical path, not folding.
 
-Two findings from the study are worth more than the headline success rate.
+Two things we found are worth more than the headline number.
 
 ### 1. Gripper geometry beats gripper force
 
-Force-closure grippers, the default choice, squeeze the thing you want to hold. On thin linen that
-drags material inward before the fingers close. Four single-DOF end effectors were 3D-printed in
-PLA+ and evaluated over teleoperated pickup trials on flat and pre-folded napkins, approached from
-both sides:
+Force-closure grippers squeeze the thing you want to hold. That is the default choice, and on thin
+linen it is the wrong one. Pinching a flat sheet drags material inward before the fingers close. We
+3D-printed four single-DOF end effectors in PLA+ and ran teleoperated pickup trials on flat and
+pre-folded napkins, approaching from both sides:
 
 | Design | Type | Pickup, flat | Pickup, folded | **Crumple, flat** | **Crumple, folded** |
 |---|---|---|---|---|---|
@@ -69,20 +70,20 @@ both sides:
 | EED (wide parallel pads) | force closure | 5.27 s | 4.17 s | 100% | 100% |
 | **EES (tangential scoop)** | **geometry entrapment** | 5.74 s | 4.57 s | **0%** | **0%** |
 
-The scoop slides a curved surface beneath the cloth edge and lifts before closing, capturing the
-napkin without any compressive loading. It drove crumpling to **zero across every condition
-tested**, at a 1 to 2 second pickup penalty that is negligible against a 90 second cycle budget.
+The scoop slides a curved surface under the cloth edge and lifts before closing, so it captures the
+napkin without ever compressing it. Zero crumpling across every condition we tested. It pays a 1 to
+2 second pickup penalty against the fastest design, which is nothing against a 90 second budget.
 
-That mattered downstream: a crumpled initial grasp produces corner misalignment and crease defects
-the folding policy cannot subsequently correct. No control-side fix produced anything comparable.
-The mechanical design was the bottleneck.
+That trade was worth taking because crumpling propagates. A crumpled grasp produces corner
+misalignment and crease defects the folding policy cannot correct later. We tried fixing this on the
+control side and got nowhere. The bottleneck was mechanical.
 
 ### 2. The stage-composition bottleneck
 
-ACT failing 0-for-20 while SmolVLA hits 70% on the *same* data looks like a straightforward
-model-capacity story. It isn't.
+ACT going 0-for-20 while SmolVLA hits 70% on the *same* data looks like a model capacity story. It
+is not.
 
-Stage-isolated ablations tell a different story:
+We trained stage-isolated variants and tested them in isolation:
 
 | Variant | Training data | Outcome |
 |---|---|---|
@@ -90,15 +91,15 @@ Stage-isolated ablations tell a different story:
 | ACT, fold only | pre-grasped napkin | folds reliably, clean diagonal crease |
 | ACT, full task | 314 episodes | **fails to compose the two** |
 
-Each sub-behavior is individually learnable from this data. The combined behavior is not, for a
-single monolithic ACT policy. The failure sits at the pickup-to-fold phase boundary, where the
-same or a near-identical observation can demand qualitatively different actions: keep grasping, or
-begin folding. ACT predicts one action chunk per timestep and cannot represent that multimodality,
-so it collapses the two modes and produces motion belonging to neither.
+Each half is learnable from this data. The whole thing is not, at least not for one monolithic ACT
+policy. The failure sits right at the pickup-to-fold boundary, where a near-identical observation
+can demand two different actions: keep grasping, or start folding. ACT predicts one action chunk per
+timestep and cannot represent that ambiguity, so it collapses the two modes together and produces
+motion that belongs to neither.
 
-SmolVLA's pretrained vision-language backbone yields richer observation features that *partially*
-disambiguate the transition, which is why it works at all. Its 70% ceiling shows that better
-representations alone do not fully resolve stage composition.
+SmolVLA's pretrained vision-language backbone gives richer observation features that partially
+disambiguate the boundary, which is why it works at all. Its 70% ceiling says better representations
+alone do not fix stage composition.
 
 <img src="assets/loss.png" width="620" alt="Training loss on log-log axes for ten runs, every one descending smoothly from roughly 50 down to between 0.05 and 0.3 across 200k gradient steps">
 
@@ -106,16 +107,16 @@ representations alone do not fully resolve stage composition.
 Each line is one training run logged during ACT development. Note that every single one of them descends
 smoothly.*
 
-**The loss-curve trap.** Every run converges. Loss falls monotonically across nearly three orders
-of magnitude with no divergence and no instability, and pushing the longest run out to 200k
-gradient steps produced no further meaningful reduction. This is exactly what a healthy, well-tuned
-training pipeline is supposed to look like, and the full-task ACT policy it produced still succeeds
-on 0% of trials. Lower loss did not buy task success either: the run that converged furthest is not
-a better folder. Behavior-cloning loss measures prediction error on demonstrated action chunks, not
-task success, so a converged loss is fully consistent with catastrophic end-to-end failure when the
-failure is one of composition rather than representation. Task-level evaluation, not loss, has to
-gate progress. That is the practical lesson from this project: if the team had trusted these curves,
-they would have concluded the model was fine.
+**The loss-curve trap.** Every run converged. Loss falls monotonically across nearly three orders of
+magnitude with no divergence and no instability, and pushing the longest run out to 200k gradient
+steps bought nothing further. That is exactly what a healthy, well-tuned training pipeline is
+supposed to look like, and the full-task policy it produced succeeds on 0% of trials. Lower loss did
+not help either. The run that converged furthest is not a better folder.
+
+Behavior-cloning loss measures prediction error on demonstrated action chunks. It does not measure
+task success. A converged loss is entirely consistent with total end-to-end failure when the failure
+is one of composition rather than representation. If we had trusted these curves we would have
+concluded the model was fine. Evaluate on the task, not on the loss.
 
 <img src="assets/completed_fold.jpeg" width="460" alt="Overhead view of a completed fold: clean diagonal crease with aligned corners">
 
@@ -128,39 +129,39 @@ grasp acquisition and stage composition, not by the folding motion.*
 <img src="assets/sysarch.png" width="600" alt="System dataflow diagram: inference path from cameras and joint poses through the control PC to the follower arms, and data-collection path from teleoperated leader arms to the logged dataset">
 
 **Hardware.** Two SO-101 6-DOF arms as followers with custom end effectors, plus a matched pair of
-SO-101 leader arms for teleoperation. All four are bolted to a single continuous hardboard base:
-stiff enough to hold the arms square during folding, while staying cheap, portable (~12 kg), and
-easy to modify. This replaced an earlier optical-breadboard build that was rigid but immobile and
-expensive.
+SO-101 leader arms for teleoperation. All four bolt to one continuous hardboard base. It is stiff
+enough to hold the arms square through a fold and still cheap, portable at around 12 kg, and easy to
+modify. We started on an optical breadboard, which was rigid but immobile and expensive, and moved
+off it.
 
-**Workspace geometry.** Two arm-spacing layouts were evaluated. The outer-edge layout was selected
-over center-mounting because it reduces inter-arm collision risk during fold-over motions and gives
-each arm enough independent reach to capture a napkin corner.
+**Workspace geometry.** We tried two arm-spacing layouts and picked outer-edge mounting over
+center-mounting. It lowers inter-arm collision risk during the fold-over motion and gives each arm
+enough independent reach to capture a napkin corner.
 
 <img src="assets/armspacing.png" width="620" alt="Two-panel reach comparison. Left: both arms mounted on the same edge, their semicircular reach envelopes covering only the near half of the workspace. Right: arms mounted on opposite edges, reach circles covering the whole board and overlapping in a tall lens down the center.">
 
-**Perception.** Three RGB cameras at 640×480 and 30 fps: one overhead on the gantry for global
-napkin pose, two wrist-mounted for local gripper-to-cloth geometry. The redundancy means a critical
-feature is unlikely to be occluded in all views at once. Camera viewpoints, lighting, and arm-base
-positions are held fixed across sessions to limit distribution shift between demonstration and
+**Perception.** Three RGB cameras at 640×480 and 30 fps. One overhead on the gantry for global
+napkin pose, two on the wrists for local gripper-to-cloth geometry. The redundancy means a critical
+feature is unlikely to be occluded in every view at once. We hold camera viewpoints, lighting, and
+arm-base positions fixed across sessions to limit distribution shift between demonstration and
 deployment.
 
 <img src="assets/camera_frames.png" width="600" alt="Synchronized frames from the three-camera stack: overhead view plus two wrist-mounted views">
 
-**Real-time inference at 30 Hz.** LeRobot's default inference path does image preprocessing
-(resize, normalize, color-space conversion) on the CPU before handing observations to the GPU. On
-the initial workstation that created a CPU bottleneck which starved the GPU and depressed the
-control-loop frequency, and at low frequency the gap between observation and action grows until
-motion turns jerky and unresponsive. We replaced it with a custom inference path that passes raw
-camera frames straight to the GPU, where the policy's own vision encoder does preprocessing inside
-the forward pass. That eliminated the bottleneck and restored the target 30 Hz control loop.
+**Real-time inference at 30 Hz.** LeRobot's default inference path does image preprocessing (resize,
+normalize, color-space conversion) on the CPU before handing observations to the GPU. On our first
+workstation that starved the GPU and dragged the control loop below target, and at low loop rates
+the gap between observation and action grows until the motion turns jerky and unresponsive. I
+replaced it with a path that hands raw camera frames straight to the GPU and lets the policy's own
+vision encoder preprocess inside the forward pass. That removed the bottleneck and put us back at
+30 Hz.
 
 ## Data and training
 
-**Dataset.** 499 episodes and 544,906 synchronized frames, collected by kinesthetic teleoperation:
-an operator drives the SO-101 leader arms, the followers mirror the leader poses, and the system
-logs synchronized 12-dimensional joint-angle trajectories together with RGB streams from all three
-cameras at 30 fps. All of it is [public](#open-source-contributions).
+**Dataset.** 499 episodes and 544,906 synchronized frames, all collected by hand. An operator drives
+the SO-101 leader arms, the followers mirror the leader poses, and we log 12-dimensional joint-angle
+trajectories together with RGB from all three cameras at 30 fps. All of it is
+[public](#open-source-contributions).
 
 | Split | Episodes | Frames | Purpose |
 |---|---|---|---|
@@ -168,30 +169,29 @@ cameras at 30 fps. All of it is [public](#open-source-contributions).
 | [Pickup only](https://huggingface.co/datasets/jhimmens/linique-v2-pickup) | 185 | 48,040 | added after early ACT runs showed pickup as the dominant failure mode |
 | [**Combined**](https://huggingface.co/datasets/jhimmens/linique-v2-fold-pickup) | **499** | **544,906** | both tasks in one corpus |
 
-**Policy families.** ACT (data-efficient, small memory footprint, 100-action chunks) was augmented
-with temporal ensembling at inference (coefficient 0.01) and cosine-annealed learning-rate
-scheduling, both of which improved trajectory smoothness and training stability over the baseline.
-SmolVLA (450M params, ~4 GB VRAM) was the most performant policy in the evaluation. An early X-VLA
-experiment was dropped after it commanded trajectories that drove the arms into the table, an
-action-space calibration mismatch. Diffusion Policy, a strong candidate for the branching
-pickup-to-fold transition precisely because it models the full multimodal action distribution, was
-left as future work.
+**Policy families.** ACT is data-efficient with a small memory footprint and emits 100-action chunks
+per inference step. We added temporal ensembling at inference (coefficient 0.01) and cosine-annealed
+learning-rate scheduling, and both improved trajectory smoothness and training stability over the
+baseline. SmolVLA at 450M params and roughly 4 GB of VRAM was the best policy we trained. We tried
+X-VLA early and dropped it after it commanded trajectories that drove the arms into the table, which
+was an action-space calibration mismatch. Diffusion Policy is the obvious candidate for the
+pickup-to-fold branch, because modeling the full multimodal action distribution is exactly what is
+missing, and we did not get to it.
 
-Everything was constrained by an edge inference budget throughout: a deployable policy has to fit
-in roughly 8 GB of VRAM, e.g. an NVIDIA Jetson Orin, which rules out the largest VLAs.
+The whole thing is constrained by an edge inference budget. A deployable policy has to fit in
+roughly 8 GB of VRAM, something like an NVIDIA Jetson Orin, which rules out the largest VLAs.
 
-**Training infrastructure.** Runs were spread across local consumer GPUs (RTX 2070, then 4070), a
-cloud provider (H100 / RTX 5090), and an institutional HPC cluster (A40). Counter-intuitively,
-local training had the fastest end-to-end iteration cycle: staging a 545k-frame image dataset and
-waiting in HPC job queues negated the raw compute advantage for short experiments. Cloud GPUs were
-reserved for long runs, including SmolVLA, where the per-step speedup justified the transfer cost.
+**Training infrastructure.** We ran across local consumer GPUs (RTX 2070, then a 4070), a cloud
+provider (H100 and RTX 5090), and an institutional HPC cluster (A40). Local turned out to have the
+fastest end-to-end iteration cycle, which we did not expect. Staging a 545k-frame image dataset and
+sitting in HPC job queues ate the compute advantage for short experiments. We saved the cloud GPUs
+for long runs like SmolVLA, where the per-step speedup paid for the transfer.
 
-**A known limitation.** The pickup-only episodes could not be merged into SmolVLA training:
-differences in episode metadata and frame indexing between the two collection runs caused
-intermittent dataloader crashes when sampling across the partition boundary. SmolVLA was therefore
-trained on the 314 full-task episodes alone. Resolving that schema incompatibility is the single
-highest-leverage fix available, since the missing data is exactly the pickup-state coverage the
-model needs.
+**A known limitation.** We could not merge the pickup-only episodes into SmolVLA training. Episode
+metadata and frame indexing differ between the two collection runs, and sampling across the
+partition boundary crashed the dataloader intermittently. So SmolVLA trained on the 314 full-task
+episodes alone. Fixing that schema mismatch is the highest-leverage thing left, because the data we
+are dropping is exactly the pickup coverage the model is worst at.
 
 ## Future work
 
@@ -199,11 +199,11 @@ model needs.
   episodes rather than 314.
 - **Stage-aware decomposition and RL fine-tuning.** Stage-Aware Reward Modeling (SARM) decomposes
   the task into stages (pickup, align, fold, release) and trains a per-stage reward model, with a
-  meta-controller sequencing them. That converts the sparse binary task reward into a dense signal,
+  meta-controller sequencing them. That turns the sparse binary task reward into a dense signal,
   which is a prerequisite for RL fine-tuning on top of an imitation-learned initialization and a
   principled remedy for the composition failure above.
 - **A continuous fold-quality metric.** Fold quality is currently scored only as binary
-  success/failure. A vision-based continuous metric would provide gradient information for both
+  success/failure. A vision-based continuous metric would give gradient information for both
   evaluation and RL fine-tuning.
 
 ## My contributions
@@ -213,26 +213,26 @@ This was a seven-person team project. My work concentrated on two areas:
 **Policy training and deployment**
 - Trained the vision-language-action and ACT policy families on cloud GPUs.
 - Deployed trained policies for real-time closed-loop inference on the physical arms.
-- **Diagnosed and patched the inference-path bottleneck in upstream LeRobot.** Its default path
-  ran image preprocessing (resize, normalize, color-space conversion) on the CPU before handing
-  observations to the GPU. That starved the GPU, pulled the control loop below its 30 Hz target,
-  and widened the observation-to-action gap until arm motion turned visibly jerky. I rerouted raw
-  camera frames straight to the GPU so the policy's own vision encoder does preprocessing inside
-  the forward pass, which removed the bottleneck and restored the full 30 Hz loop.
+- **Diagnosed and patched the inference-path bottleneck in upstream LeRobot.** Its default path ran
+  image preprocessing (resize, normalize, color-space conversion) on the CPU before handing
+  observations to the GPU. That starved the GPU, pulled the control loop below its 30 Hz target, and
+  widened the observation-to-action gap until arm motion turned visibly jerky. I rerouted raw camera
+  frames straight to the GPU so the policy's own vision encoder preprocesses inside the forward
+  pass, which removed the bottleneck and restored the full 30 Hz loop.
 - Owned the pipeline end to end, from raw collected data through to a policy running on hardware.
 
 **Dataset and teleoperation**
-- Collected the teleoperation dataset across 3 synchronized camera views, the corpus now released
-  publicly as [`linique-v2`](https://huggingface.co/datasets/jhimmens/linique-v2) and
-  [`linique-v2-fold-pickup`](https://huggingface.co/datasets/jhimmens/linique-v2-fold-pickup) on
-  the Hugging Face Hub.
+- Collected the teleoperation dataset across 3 synchronized camera views. That corpus is now public
+  as [`linique-v2`](https://huggingface.co/datasets/jhimmens/linique-v2) and
+  [`linique-v2-fold-pickup`](https://huggingface.co/datasets/jhimmens/linique-v2-fold-pickup) on the
+  Hugging Face Hub.
 
 ## Open source contributions
 
-Real bimanual cloth-manipulation data is scarce, and it is the expensive part of this kind of
-project: roughly five hours of a human driving leader arms, one napkin at a time. All of it is
-public, in standard [LeRobot](https://github.com/huggingface/lerobot) format, so it loads with two
-lines and needs no conversion.
+Real bimanual cloth-manipulation data is scarce, and it is the expensive part of a project like
+this. Roughly five hours of a human driving leader arms, one napkin at a time. It is all public, in
+standard [LeRobot](https://github.com/huggingface/lerobot) format, so it loads in two lines with no
+conversion.
 
 **Datasets** ([full profile](https://huggingface.co/jhimmens))
 
@@ -284,5 +284,5 @@ Joshua Himmens, Sloan Sobie, Dawson March, Genevieve Merz, Cameron Powell, Jaden
 [📄 Full paper (PDF)](paper/napkin_folding.pdf)
 ## Notes on this repo
 
-This is a project write-up, not the implementation. The system is built on a fork of
-[huggingface/lerobot](https://github.com/huggingface/lerobot); this repo holds the paper, the figures, and a summary of the work.
+This is a project write-up, not the implementation. The system runs on a fork of
+[huggingface/lerobot](https://github.com/huggingface/lerobot). This repo holds the paper, the figures, and a summary of the work.
