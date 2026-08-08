@@ -155,6 +155,11 @@ motion turns jerky and unresponsive. We replaced it with a custom inference path
 camera frames straight to the GPU, where the policy's own vision encoder does preprocessing inside
 the forward pass. That eliminated the bottleneck and restored the target 30 Hz control loop.
 
+<img src="assets/actloop.png" width="620" alt="The seven-step ACT inference loop: observe, process, frame, policy inference on GPU with temporal ensembling, convert, send over USB serial, and precise-sleep timing at 30 fps">
+
+*The resulting loop. Step 2's `obs_processor` normalizes joints only; image normalization moved
+into step 4, inside the box marked GPU. That split is the fix.*
+
 ## Data and training
 
 **Dataset.** 499 episodes and 544,906 synchronized frames, collected by kinesthetic teleoperation:
