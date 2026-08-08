@@ -4,7 +4,12 @@
 
 `Python` · `PyTorch` · `LeRobot` · `SmolVLA` · `ACT` · `SO-101` · `Hugging Face Hub`
 
-[**▶ Watch the demo**](https://x.com/jack_polloway/status/2060747250800988349?s=20) · [**Read the paper**](paper/napkin_folding.pdf) · [**Conference poster**](paper/ieee_poster.pdf)
+[**▶ Watch the demo**](https://x.com/jack_polloway/status/2060747250800988349?s=20) · [**Read the paper**](paper/napkin_folding.pdf) · [**Conference poster**](paper/ieee_poster.pdf) · [**🤗 Datasets and models**](#open-release-take-the-data-and-the-weights)
+
+> **Everything is public.** 499 episodes and ~545k frames of real bimanual cloth manipulation,
+> plus the trained policy weights, released on the Hugging Face Hub in standard LeRobot format
+> under Apache-2.0. You can `git clone` the data and fine-tune on it today.
+> [Jump to the release ↓](#open-release-take-the-data-and-the-weights)
 
 <img src="assets/prototype.jpeg" width="520" alt="The bimanual napkin folding rig: two SO-101 follower arms on a hardboard base, overhead camera gantry, leader arms in the foreground">
 
@@ -27,6 +32,52 @@ The task is narrow on purpose: premium hospitality venues spend one to three hou
 time per day on decorative folding, which makes it a real workload with a bounded perception and
 workspace problem.
 
+## Open release: take the data and the weights
+
+Real bimanual cloth-manipulation data is scarce, and it is the expensive part of this kind of
+project: roughly five hours of a human driving leader arms, one napkin at a time. All of it is
+public, in standard [LeRobot](https://github.com/huggingface/lerobot) format, so it loads with two
+lines and needs no conversion.
+
+**Datasets** ([full profile](https://huggingface.co/jhimmens))
+
+| Dataset | Episodes | Frames | What it is |
+|---|---|---|---|
+| [**linique-v2-fold-pickup**](https://huggingface.co/datasets/jhimmens/linique-v2-fold-pickup) | **499** | **544,906** | The complete corpus, both tasks. Start here. Citable: [`10.57967/hf/8174`](https://doi.org/10.57967/hf/8174) |
+| [linique-v2](https://huggingface.co/datasets/jhimmens/linique-v2) | 314 | 496,866 | Full-task only: pick up a flat napkin, align corners, complete the fold |
+| [linique-v2-pickup](https://huggingface.co/datasets/jhimmens/linique-v2-pickup) | 185 | 48,040 | Pickup and corner-capture phase in isolation |
+| [linique-v2-pickup-force](https://huggingface.co/datasets/jhimmens/linique-v2-pickup-force) | 189 | 50,077 | Pickup with force sensing: 24-dim state instead of 12 |
+| [linique-v2-combined-force](https://huggingface.co/datasets/jhimmens/linique-v2-combined-force) † | 503 | 546,943 | Full corpus with force sensing, 24-dim state |
+| [linique-v2-load-padded](https://huggingface.co/datasets/jhimmens/linique-v2-load-padded) † | 314 | 496,866 | Full-task with padded load channels, 24-dim state |
+
+Every episode carries three synchronized 640×480 RGB streams (one overhead, two wrist-mounted) at
+30 fps alongside 12-dimensional bimanual joint trajectories, recorded on a `bi_so_follower` robot.
+
+**Trained policies**
+
+| Model | Base | Trained on |
+|---|---|---|
+| [**smolvla-napkin-fold**](https://huggingface.co/jhimmens/smolvla-napkin-fold) | [lerobot/smolvla_base](https://huggingface.co/lerobot/smolvla_base) | `linique-v2`. This is the 70% policy from the results table below. |
+| [xvla-linique-v2-fold-pickup](https://huggingface.co/jhimmens/xvla-linique-v2-fold-pickup) | X-VLA | `linique-v2-fold-pickup` |
+
+```python
+from lerobot.datasets.lerobot_dataset import LeRobotDataset
+
+# the full 499-episode corpus, LeRobot dataset format v3.0
+dataset = LeRobotDataset("jhimmens/linique-v2-fold-pickup")
+```
+
+Or browse it in the [dataset
+visualizer](https://huggingface.co/spaces/lerobot/visualize_dataset?path=jhimmens/linique-v2-fold-pickup)
+without downloading anything.
+
+The full corpus, the two phase splits, the force-sensing pickup set, and both models are
+Apache-2.0, so they are usable commercially and for derivative work without asking. If you train
+something better on this data, that is the point of releasing it.
+
+† These two variants are public but do not yet carry a declared license, so treat them as
+all-rights-reserved until one is added.
+
 ## Results
 
 The system was benchmarked against operationally derived deployment requirements, then run for 20
@@ -43,7 +94,7 @@ edge-accuracy thresholds.
 
 | Policy | Success | Rate | Cycle | Edge dev. |
 |---|---|---|---|---|
-| **SmolVLA** (450M VLA) | 14 / 20 | **70%** | 40.2 s | 6 mm |
+| **SmolVLA** (450M VLA) [🤗 weights](https://huggingface.co/jhimmens/smolvla-napkin-fold) | 14 / 20 | **70%** | 40.2 s | 6 mm |
 | **ACT** (Action-Chunking Transformer), identical data | 0 / 20 | **0%** | n/a | n/a |
 
 SmolVLA cleared the speed and accuracy budgets with margin but missed the 80% deployment
@@ -83,9 +134,9 @@ Stage-isolated ablations tell a different story:
 
 | Variant | Training data | Outcome |
 |---|---|---|
-| ACT, pickup only | 99 episodes | reliable grasps in nearly all trials |
+| ACT, pickup only | 185 episodes | reliable grasps in nearly all trials |
 | ACT, fold only | pre-grasped napkin | folds reliably, clean diagonal crease |
-| ACT, full task | 400 episodes | **fails to compose the two** |
+| ACT, full task | 314 episodes | **fails to compose the two** |
 
 Each sub-behavior is individually learnable from this data. The combined behavior is not, for a
 single monolithic ACT policy. The failure sits at the pickup-to-fold phase boundary, where the
@@ -145,15 +196,16 @@ the forward pass. That eliminated the bottleneck and restored the target 30 Hz c
 
 ## Data and training
 
-**Dataset.** 499 episodes and over 550k synchronized frames, collected by kinesthetic
-teleoperation: an operator drives the SO-101 leader arms, the followers mirror the leader poses,
-and the system logs synchronized 12-dimensional joint-angle trajectories together with RGB streams
-from all three cameras at 30 fps. Released publicly to support reproducibility.
+**Dataset.** 499 episodes and 544,906 synchronized frames, collected by kinesthetic teleoperation:
+an operator drives the SO-101 leader arms, the followers mirror the leader poses, and the system
+logs synchronized 12-dimensional joint-angle trajectories together with RGB streams from all three
+cameras at 30 fps. All of it is [public](#open-release-take-the-data-and-the-weights).
 
-| Split | Episodes | Duration | Purpose |
+| Split | Episodes | Frames | Purpose |
 |---|---|---|---|
-| Full task | 400 | ~4 h | pick up a flat napkin, align corners, execute the complete fold |
-| Pickup only | 99 | ~1 h | added after early ACT runs showed pickup as the dominant failure mode |
+| [Full task](https://huggingface.co/datasets/jhimmens/linique-v2) | 314 | 496,866 | pick up a flat napkin, align corners, execute the complete fold |
+| [Pickup only](https://huggingface.co/datasets/jhimmens/linique-v2-pickup) | 185 | 48,040 | added after early ACT runs showed pickup as the dominant failure mode |
+| [**Combined**](https://huggingface.co/datasets/jhimmens/linique-v2-fold-pickup) | **499** | **544,906** | both tasks in one corpus |
 
 **Policy families.** ACT (data-efficient, small memory footprint, 100-action chunks) was augmented
 with temporal ensembling at inference (coefficient 0.01) and cosine-annealed learning-rate
@@ -169,21 +221,21 @@ in roughly 8 GB of VRAM, e.g. an NVIDIA Jetson Orin, which rules out the largest
 
 **Training infrastructure.** Runs were spread across local consumer GPUs (RTX 2070, then 4070), a
 cloud provider (H100 / RTX 5090), and an institutional HPC cluster (A40). Counter-intuitively,
-local training had the fastest end-to-end iteration cycle: staging a 550k-frame image dataset and
+local training had the fastest end-to-end iteration cycle: staging a 545k-frame image dataset and
 waiting in HPC job queues negated the raw compute advantage for short experiments. Cloud GPUs were
 reserved for long runs, including SmolVLA, where the per-step speedup justified the transfer cost.
 
 **A known limitation.** The pickup-only episodes could not be merged into SmolVLA training:
 differences in episode metadata and frame indexing between the two collection runs caused
 intermittent dataloader crashes when sampling across the partition boundary. SmolVLA was therefore
-trained on the 400 full-task episodes alone. Resolving that schema incompatibility is the single
+trained on the 314 full-task episodes alone. Resolving that schema incompatibility is the single
 highest-leverage fix available, since the missing data is exactly the pickup-state coverage the
 model needs.
 
 ## Where it goes next
 
 - **Combined-corpus training.** Fix the dataset schema mismatch and train SmolVLA on all 499
-  episodes rather than 400.
+  episodes rather than 314.
 - **Stage-aware decomposition and RL fine-tuning.** Stage-Aware Reward Modeling (SARM) decomposes
   the task into stages (pickup, align, fold, release) and trains a per-stage reward model, with a
   meta-controller sequencing them. That converts the sparse binary task reward into a dense signal,
@@ -211,7 +263,10 @@ This was a seven-person team project. My work concentrated on two areas:
 - Owned the pipeline end to end, from raw collected data through to a policy running on hardware.
 
 **Dataset and teleoperation**
-- Collected the teleoperation dataset across 3 synchronized camera views.
+- Collected the teleoperation dataset across 3 synchronized camera views, the corpus now released
+  publicly as [`linique-v2`](https://huggingface.co/datasets/jhimmens/linique-v2) and
+  [`linique-v2-fold-pickup`](https://huggingface.co/datasets/jhimmens/linique-v2-fold-pickup) on
+  the Hugging Face Hub.
 
 ## Paper
 
