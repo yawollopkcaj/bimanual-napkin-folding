@@ -2,12 +2,12 @@
 
 **Two 6-DOF robot arms that learn to fold linen napkins from human demonstration. No simulator, no reward engineering, open low-cost hardware.**
 
-[**▶ Watch the demo**](https://x.com/jack_polloway/status/2060747250800988349?s=20) · [**Read the paper**](paper/napkin_folding.pdf) · [**🤗 Datasets and models**](#open-release-take-the-data-and-the-weights)
+[**▶ Watch the demo**](https://x.com/jack_polloway/status/2060747250800988349?s=20) · [**Read the paper**](paper/napkin_folding.pdf) · [**🤗 Datasets and models**](#open-source-contributions)
 
 > **Everything is public.** 499 episodes and ~545k frames of real bimanual cloth manipulation,
 > plus the trained policy weights, released on the Hugging Face Hub in standard LeRobot format
 > under Apache-2.0.
-> [Jump to the release ↓](#open-release-take-the-data-and-the-weights)
+> [Jump to the release ↓](#open-source-contributions)
 
 <img src="assets/prototype.jpeg" width="520" alt="The bimanual napkin folding rig: two SO-101 follower arms on a hardboard base, overhead camera gantry, leader arms in the foreground">
 
@@ -160,7 +160,7 @@ the forward pass. That eliminated the bottleneck and restored the target 30 Hz c
 **Dataset.** 499 episodes and 544,906 synchronized frames, collected by kinesthetic teleoperation:
 an operator drives the SO-101 leader arms, the followers mirror the leader poses, and the system
 logs synchronized 12-dimensional joint-angle trajectories together with RGB streams from all three
-cameras at 30 fps. All of it is [public](#open-release-take-the-data-and-the-weights).
+cameras at 30 fps. All of it is [public](#open-source-contributions).
 
 | Split | Episodes | Frames | Purpose |
 |---|---|---|---|
@@ -227,7 +227,7 @@ This was a seven-person team project. My work concentrated on two areas:
   [`linique-v2-fold-pickup`](https://huggingface.co/datasets/jhimmens/linique-v2-fold-pickup) on
   the Hugging Face Hub.
 
-## Open source contribution 
+## Open source contributions
 
 Real bimanual cloth-manipulation data is scarce, and it is the expensive part of this kind of
 project: roughly five hours of a human driving leader arms, one napkin at a time. All of it is
