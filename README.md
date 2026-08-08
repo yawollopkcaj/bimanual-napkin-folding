@@ -30,52 +30,6 @@ The task is narrow on purpose: premium hospitality venues spend one to three hou
 time per day on decorative folding, which makes it a real workload with a bounded perception and
 workspace problem.
 
-## Open release: take the data and the weights
-
-Real bimanual cloth-manipulation data is scarce, and it is the expensive part of this kind of
-project: roughly five hours of a human driving leader arms, one napkin at a time. All of it is
-public, in standard [LeRobot](https://github.com/huggingface/lerobot) format, so it loads with two
-lines and needs no conversion.
-
-**Datasets** ([full profile](https://huggingface.co/jhimmens))
-
-| Dataset | Episodes | Frames | What it is |
-|---|---|---|---|
-| [**linique-v2-fold-pickup**](https://huggingface.co/datasets/jhimmens/linique-v2-fold-pickup) | **499** | **544,906** | The complete corpus, both tasks. Start here. Citable: [`10.57967/hf/8174`](https://doi.org/10.57967/hf/8174) |
-| [linique-v2](https://huggingface.co/datasets/jhimmens/linique-v2) | 314 | 496,866 | Full-task only: pick up a flat napkin, align corners, complete the fold |
-| [linique-v2-pickup](https://huggingface.co/datasets/jhimmens/linique-v2-pickup) | 185 | 48,040 | Pickup and corner-capture phase in isolation |
-| [linique-v2-pickup-force](https://huggingface.co/datasets/jhimmens/linique-v2-pickup-force) | 189 | 50,077 | Pickup with force sensing: 24-dim state instead of 12 |
-| [linique-v2-combined-force](https://huggingface.co/datasets/jhimmens/linique-v2-combined-force) † | 503 | 546,943 | Full corpus with force sensing, 24-dim state |
-| [linique-v2-load-padded](https://huggingface.co/datasets/jhimmens/linique-v2-load-padded) † | 314 | 496,866 | Full-task with padded load channels, 24-dim state |
-
-Every episode carries three synchronized 640×480 RGB streams (one overhead, two wrist-mounted) at
-30 fps alongside 12-dimensional bimanual joint trajectories, recorded on a `bi_so_follower` robot.
-
-**Trained policies**
-
-| Model | Base | Trained on |
-|---|---|---|
-| [**smolvla-napkin-fold**](https://huggingface.co/jhimmens/smolvla-napkin-fold) | [lerobot/smolvla_base](https://huggingface.co/lerobot/smolvla_base) | `linique-v2`. This is the 70% policy from the results table below. |
-| [xvla-linique-v2-fold-pickup](https://huggingface.co/jhimmens/xvla-linique-v2-fold-pickup) | X-VLA | `linique-v2-fold-pickup` |
-
-```python
-from lerobot.datasets.lerobot_dataset import LeRobotDataset
-
-# the full 499-episode corpus, LeRobot dataset format v3.0
-dataset = LeRobotDataset("jhimmens/linique-v2-fold-pickup")
-```
-
-Or browse it in the [dataset
-visualizer](https://huggingface.co/spaces/lerobot/visualize_dataset?path=jhimmens/linique-v2-fold-pickup)
-without downloading anything.
-
-The full corpus, the two phase splits, the force-sensing pickup set, and both models are
-Apache-2.0, so they are usable commercially and for derivative work without asking. If you train
-something better on this data, that is the point of releasing it.
-
-† These two variants are public but do not yet carry a declared license, so treat them as
-all-rights-reserved until one is added.
-
 ## Results
 
 The system was benchmarked against operationally derived deployment requirements, then run for 20
@@ -265,6 +219,52 @@ This was a seven-person team project. My work concentrated on two areas:
   publicly as [`linique-v2`](https://huggingface.co/datasets/jhimmens/linique-v2) and
   [`linique-v2-fold-pickup`](https://huggingface.co/datasets/jhimmens/linique-v2-fold-pickup) on
   the Hugging Face Hub.
+
+## Open release: take the data and the weights
+
+Real bimanual cloth-manipulation data is scarce, and it is the expensive part of this kind of
+project: roughly five hours of a human driving leader arms, one napkin at a time. All of it is
+public, in standard [LeRobot](https://github.com/huggingface/lerobot) format, so it loads with two
+lines and needs no conversion.
+
+**Datasets** ([full profile](https://huggingface.co/jhimmens))
+
+| Dataset | Episodes | Frames | What it is |
+|---|---|---|---|
+| [**linique-v2-fold-pickup**](https://huggingface.co/datasets/jhimmens/linique-v2-fold-pickup) | **499** | **544,906** | The complete corpus, both tasks. Start here. Citable: [`10.57967/hf/8174`](https://doi.org/10.57967/hf/8174) |
+| [linique-v2](https://huggingface.co/datasets/jhimmens/linique-v2) | 314 | 496,866 | Full-task only: pick up a flat napkin, align corners, complete the fold |
+| [linique-v2-pickup](https://huggingface.co/datasets/jhimmens/linique-v2-pickup) | 185 | 48,040 | Pickup and corner-capture phase in isolation |
+| [linique-v2-pickup-force](https://huggingface.co/datasets/jhimmens/linique-v2-pickup-force) | 189 | 50,077 | Pickup with force sensing: 24-dim state instead of 12 |
+| [linique-v2-combined-force](https://huggingface.co/datasets/jhimmens/linique-v2-combined-force) † | 503 | 546,943 | Full corpus with force sensing, 24-dim state |
+| [linique-v2-load-padded](https://huggingface.co/datasets/jhimmens/linique-v2-load-padded) † | 314 | 496,866 | Full-task with padded load channels, 24-dim state |
+
+Every episode carries three synchronized 640×480 RGB streams (one overhead, two wrist-mounted) at
+30 fps alongside 12-dimensional bimanual joint trajectories, recorded on a `bi_so_follower` robot.
+
+**Trained policies**
+
+| Model | Base | Trained on |
+|---|---|---|
+| [**smolvla-napkin-fold**](https://huggingface.co/jhimmens/smolvla-napkin-fold) | [lerobot/smolvla_base](https://huggingface.co/lerobot/smolvla_base) | `linique-v2`. This is the 70% policy from the results table above. |
+| [xvla-linique-v2-fold-pickup](https://huggingface.co/jhimmens/xvla-linique-v2-fold-pickup) | X-VLA | `linique-v2-fold-pickup` |
+
+```python
+from lerobot.datasets.lerobot_dataset import LeRobotDataset
+
+# the full 499-episode corpus, LeRobot dataset format v3.0
+dataset = LeRobotDataset("jhimmens/linique-v2-fold-pickup")
+```
+
+Or browse it in the [dataset
+visualizer](https://huggingface.co/spaces/lerobot/visualize_dataset?path=jhimmens/linique-v2-fold-pickup)
+without downloading anything.
+
+The full corpus, the two phase splits, the force-sensing pickup set, and both models are
+Apache-2.0, so they are usable commercially and for derivative work without asking. If you train
+something better on this data, that is the point of releasing it.
+
+† These two variants are public but do not yet carry a declared license, so treat them as
+all-rights-reserved until one is added.
 
 ## Paper
 
