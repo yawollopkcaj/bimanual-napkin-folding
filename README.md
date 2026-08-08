@@ -103,12 +103,7 @@ representations alone do not fully resolve stage composition.
 <img src="assets/loss.png" width="620" alt="Training loss on log-log axes for ten runs, every one descending smoothly from roughly 50 down to between 0.05 and 0.3 across 200k gradient steps">
 
 *Training loss, log-log. Gradient step on the x axis (100 to 200k), behavior-cloning loss on the y.
-Each line is one training run logged during ACT development. Two are explicitly labeled
-`act-baseline`; the rest carry Weights & Biases auto-generated names (`copper-fire-5`,
-`vivid-pine-12`, `cinnamon-tart-7` and so on) that are assigned at random and encode nothing about
-their configuration. The lines that stop early are runs terminated before completion, mostly within
-the first few thousand steps. Four ran the full distance and finished between roughly 0.05 and 0.3.
-The figure is not here to single out a winner. It is here because every single one of them descends
+Each line is one training run logged during ACT development. Note that every single one of them descends
 smoothly.*
 
 **The loss-curve trap.** Every run converges. Loss falls monotonically across nearly three orders
@@ -143,15 +138,6 @@ over center-mounting because it reduces inter-arm collision risk during fold-ove
 each arm enough independent reach to capture a napkin corner.
 
 <img src="assets/armspacing.png" width="620" alt="Two-panel reach comparison. Left: both arms mounted on the same edge, their semicircular reach envelopes covering only the near half of the workspace. Right: arms mounted on opposite edges, reach circles covering the whole board and overlapping in a tall lens down the center.">
-
-*Reach envelopes for the two candidate layouts. The solid outline is the baseboard, the dashed
-rectangle is the napkin workspace, and the shaded regions are each arm's reach. **Left**, both arms
-on the same edge: the envelopes only cover the near half of the board, so the far edge of the
-workspace is unreachable by either arm, and the region both can reach is a small pocket pinned
-against the near edge. **Right**, arms on opposite edges (selected): coverage spans the full board
-and the shared region becomes a tall lens running down the middle, which is where the fold actually
-happens. Putting the two-handed zone in the center of the workspace rather than at its edge is what
-makes the fold-over motion collision-free.*
 
 **Perception.** Three RGB cameras at 640×480 and 30 fps: one overhead on the gantry for global
 napkin pose, two wrist-mounted for local gripper-to-cloth geometry. The redundancy means a critical
