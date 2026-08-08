@@ -142,6 +142,17 @@ expensive.
 over center-mounting because it reduces inter-arm collision risk during fold-over motions and gives
 each arm enough independent reach to capture a napkin corner.
 
+<img src="assets/armspacing.png" width="620" alt="Two-panel reach comparison. Left: both arms mounted on the same edge, their semicircular reach envelopes covering only the near half of the workspace. Right: arms mounted on opposite edges, reach circles covering the whole board and overlapping in a tall lens down the center.">
+
+*Reach envelopes for the two candidate layouts. The solid outline is the baseboard, the dashed
+rectangle is the napkin workspace, and the shaded regions are each arm's reach. **Left**, both arms
+on the same edge: the envelopes only cover the near half of the board, so the far edge of the
+workspace is unreachable by either arm, and the region both can reach is a small pocket pinned
+against the near edge. **Right**, arms on opposite edges (selected): coverage spans the full board
+and the shared region becomes a tall lens running down the middle, which is where the fold actually
+happens. Putting the two-handed zone in the center of the workspace rather than at its edge is what
+makes the fold-over motion collision-free.*
+
 **Perception.** Three RGB cameras at 640×480 and 30 fps: one overhead on the gantry for global
 napkin pose, two wrist-mounted for local gripper-to-cloth geometry. The redundancy means a critical
 feature is unlikely to be occluded in all views at once. Camera viewpoints, lighting, and arm-base
