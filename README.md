@@ -184,9 +184,11 @@ model needs.
 
 - **Combined-corpus training.** Fix the dataset schema mismatch and train SmolVLA on all 499
   episodes rather than 400.
-- **Stage-aware decomposition and RL fine-tuning.** Segment the task into stages (approach, grasp,
-  align, fold, release) and train a per-stage reward model, so the policy gets dense stage-level
-  feedback instead of a single sparse binary task reward.
+- **Stage-aware decomposition and RL fine-tuning.** Stage-Aware Reward Modeling (SARM) decomposes
+  the task into stages (pickup, align, fold, release) and trains a per-stage reward model, with a
+  meta-controller sequencing them. That converts the sparse binary task reward into a dense signal,
+  which is a prerequisite for RL fine-tuning on top of an imitation-learned initialization and a
+  principled remedy for the composition failure above.
 - **Flow-matching policies.** These would let the temporal-ensembling and scheduling refinements
   developed for ACT transfer naturally to the VLA training loop.
 - **A continuous fold-quality metric.** Fold quality is currently scored only as binary
@@ -200,27 +202,16 @@ This was a seven-person team project. My work concentrated on two areas:
 **Policy training and deployment**
 - Trained the vision-language-action and ACT policy families on cloud GPUs.
 - Deployed trained policies for real-time closed-loop inference on the physical arms.
+- **Diagnosed and patched the inference-path bottleneck in upstream LeRobot.** Its default path
+  ran image preprocessing (resize, normalize, color-space conversion) on the CPU before handing
+  observations to the GPU. That starved the GPU, pulled the control loop below its 30 Hz target,
+  and widened the observation-to-action gap until arm motion turned visibly jerky. I rerouted raw
+  camera frames straight to the GPU so the policy's own vision encoder does preprocessing inside
+  the forward pass, which removed the bottleneck and restored the full 30 Hz loop.
 - Owned the pipeline end to end, from raw collected data through to a policy running on hardware.
 
 **Dataset and teleoperation**
 - Collected the teleoperation dataset across 3 synchronized camera views.
-- Applied Stage-Aware Reward Modeling (SARM) annotation to improve data quality.
-  <!-- TODO (Jack): verify or cut this line. The paper lists SARM only under future work
-       ("Paths to closing the gap"), citing Chen et al. It does not describe SARM annotation
-       as having been applied to the dataset. Anyone who reads the paper alongside this page
-       will see the mismatch. If you did the annotation work outside what the paper reports,
-       say what it produced; otherwise this should come out. -->
-
-
-**Also**
-- Identified and patched two bugs in the upstream LeRobot codebase.
-  <!-- TODO (Jack): name these two bugs concretely. The paper describes two candidates that may
-       be yours: (a) the CPU-side preprocessing bottleneck in LeRobot's default inference path,
-       fixed by passing raw frames to the GPU and restoring the 30 Hz control loop; (b) the
-       episode-metadata / frame-indexing schema mismatch that crashed the dataloader when
-       sampling across the full-task / pickup-only partition boundary. If either is yours, say
-       so here and link the PR or commit. A named bug is the single most credible line on this
-       page. -->
 
 ## Paper
 
