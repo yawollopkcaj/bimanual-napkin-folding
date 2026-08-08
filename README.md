@@ -276,10 +276,8 @@ Geometry and the Stage-Composition Bottleneck**
 Joshua Himmens, Sloan Sobie, Dawson March, Genevieve Merz, Cameron Powell, Jaden Legate, Jack Polloway
 *University of British Columbia, Vancouver, BC, Canada*
 
-[📄 Full paper (PDF)](paper/napkin_folding.pdf) · [📊 Conference poster (PDF)](paper/ieee_poster.pdf)
-
+[📄 Full paper (PDF)](paper/napkin_folding.pdf)
 ## Notes on this repo
 
 This is a project write-up, not the implementation. The system is built on a fork of
-[huggingface/lerobot](https://github.com/huggingface/lerobot); this repo holds the paper, the
-poster, the figures, and a summary of the work.
+[huggingface/lerobot](https://github.com/huggingface/lerobot); this repo holds the paper, the figures, and a summary of the work.
