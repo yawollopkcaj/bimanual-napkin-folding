@@ -7,7 +7,7 @@
 > **Everything is public.** 499 episodes and ~545k frames of real bimanual cloth manipulation,
 > plus the trained policy weights, released on the Hugging Face Hub in standard LeRobot format
 > under Apache-2.0.
-> [Jump to the open source ↓](#open-source-contributions)
+> [Jump to the open source](#open-source-contributions)
 
 <img src="assets/prototype.jpeg" width="520" alt="The bimanual napkin folding rig: two SO-101 follower arms on a hardboard base, overhead camera gantry, leader arms in the foreground">
 
@@ -273,6 +273,25 @@ something better on this data, that is the point of releasing it.
 † These two variants are public but do not yet carry a declared license, so treat them as
 all-rights-reserved until one is added.
 
+## Hard problems we hit (and what we learned)
+
+### SO-101 wrist_roll calibration
+
+Symptom. Teleop and replay looked wrong on the wrist. Calibration felt inconsistent between reconnects. Sometimes the leader and follower disagreed on where "zero" was. At times calibration crashed with errors about homing offset magnitude exceeding the signed limit the motor firmware accepts.
+
+What was actually going on. On the SO-101, wrist_roll is (often) a continuous joint. LeRobot treats it as a full-turn motor: it skips the min/max range sweep used for the other joints, hardcodes the encoder circle to [0, 4095], and still runs half-turn homing that assumes the joint is near mid-scale (~2048) when you confirm the home pose.
+
+That creates a trap:
+
+There is no mechanical true zero for a continuous wrist.
+If the Feetech STS3215 is left in multi-turn mode, position readings can leave [0, 4095]. Homing math then overflows the signed 11-bit homing field and blows up.
+If leader and follower are calibrated with the wrist parked in different places, their software zeros do not match, so teleop on that joint is wrong even when everything else looks fine.
+What we did. We centered the wrist carefully during calibrate, investigated drift between sessions, and built a simple mechanical jig so we could repeat home pose to about 2 degrees instead of eyeballing it. We also raised the behavior in the LeRobot / Hugging Face community (docs clarity around centering wrist_roll, full-turn assumptions).
+
+Upstream resolution (for context). The same class of bugs showed up publicly later (lerobot#3193). Hugging Face merged a Feetech fix that forces STS3215 single-turn mode so positions wrap cleanly in [0, 4095] instead of overflowing (lerobot#3373). A proposed "shrink the range to force a symmetric software zero" approach was correctly rejected because it cut continuous wrist ROM roughly in half.
+
+Takeaway. Continuous joints need an explicit zeroing ritual. Process knowledge (where you park the wrist, how you reconnect, whether the encoder is single-turn) decides whether a dataset is even usable. A policy cannot fix a broken home.
+
 ## Paper
 
 **Bimanual Imitation Learning for Decorative Napkin Folding on Low-Cost Hardware: End-Effector
@@ -282,6 +301,7 @@ Joshua Himmens, Sloan Sobie, Dawson March, Genevieve Merz, Cameron Powell, Jaden
 *University of British Columbia, Vancouver, BC, Canada*
 
 [📄 Full paper (PDF)](paper/napkin_folding.pdf)
+
 ## Notes on this repo
 
 This is a project write-up, not the implementation. The system runs on a fork of
