@@ -2,12 +2,12 @@
 
 **Two 6-DOF robot arms that learn to fold linen napkins from human demonstration. No simulator, no reward engineering, open low-cost hardware.**
 
-[**▶ Watch the demo**](https://x.com/jack_polloway/status/2060747250800988349?s=20) | [**Read the paper**](paper/napkin_folding.pdf) | [**🤗 Datasets and models**](#open-source-contributions)
+[**▶ Watch the demo**](https://x.com/jack_polloway/status/2060747250800988349?s=20) | [**Read the paper**](paper/napkin_folding.pdf)
 
 > **Everything is public.** 499 episodes and ~545k frames of real bimanual cloth manipulation,
 > plus the trained policy weights, released on the Hugging Face Hub in standard LeRobot format
 > under Apache-2.0.
-> [Jump to the open source](#open-source-contributions)
+> [Jump to the open source datasets and models](#open-source-contributions)
 
 <img src="assets/prototype.jpeg" width="520" alt="The bimanual napkin folding rig: two SO-101 follower arms on a hardboard base, overhead camera gantry, leader arms in the foreground">
 
