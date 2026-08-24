@@ -1,8 +1,6 @@
 # Bimanual Napkin Folding Robot
 
-**Two 6-DOF robot arms that learn to fold linen napkins from human demonstration. No simulator, no reward engineering, open low-cost hardware.**
-
-[**▶ Watch the demo**](https://x.com/jack_polloway/status/2060747250800988349?s=20)
+**Two 6-DOF robot arms that learn to fold linen napkins from human demonstration. No simulator, no reward engineering, open low-cost hardware.** [**▶ Watch the demo**](https://x.com/jack_polloway/status/2060747250800988349?s=20)
 
 > **Everything is public.** 499 episodes and ~545k frames of real bimanual cloth manipulation,
 > plus the trained policy weights, released on the Hugging Face Hub in standard LeRobot format
