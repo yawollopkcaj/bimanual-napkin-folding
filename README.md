@@ -2,7 +2,7 @@
 
 **Two 6-DOF robot arms that learn to fold linen napkins from human demonstration. No simulator, no reward engineering, open low-cost hardware.**
 
-[**▶ Watch the demo**](https://x.com/jack_polloway/status/2060747250800988349?s=20) | [**Read the paper**](paper/napkin_folding.pdf)
+[**▶ Watch the demo**](https://x.com/jack_polloway/status/2060747250800988349?s=20)
 
 > **Everything is public.** 499 episodes and ~545k frames of real bimanual cloth manipulation,
 > plus the trained policy weights, released on the Hugging Face Hub in standard LeRobot format
@@ -277,16 +277,6 @@ What we did. We centered the wrist carefully during calibrate, investigated drif
 Upstream resolution (for context). The same class of bugs showed up publicly later (lerobot#3193). Hugging Face merged a Feetech fix that forces STS3215 single-turn mode so positions wrap cleanly in [0, 4095] instead of overflowing (lerobot#3373). A proposed "shrink the range to force a symmetric software zero" approach was correctly rejected because it cut continuous wrist ROM roughly in half.
 
 Takeaway. Continuous joints need an explicit zeroing ritual. Process knowledge (where you park the wrist, how you reconnect, whether the encoder is single-turn) decides whether a dataset is even usable. A policy cannot fix a broken home.
-
-## Paper
-
-**Bimanual Imitation Learning for Decorative Napkin Folding on Low-Cost Hardware: End-Effector
-Geometry and the Stage-Composition Bottleneck**
-
-Joshua Himmens, Sloan Sobie, Dawson March, Genevieve Merz, Cameron Powell, Jaden Legate, Jack Polloway
-*University of British Columbia, Vancouver, BC, Canada*
-
-[📄 Full paper (PDF)](paper/napkin_folding.pdf)
 
 ## Notes on this repo
 
