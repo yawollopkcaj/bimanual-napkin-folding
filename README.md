@@ -255,23 +255,9 @@ Every episode carries three synchronized 640×480 RGB streams (one overhead, two
 | [**smolvla-napkin-fold**](https://huggingface.co/jhimmens/smolvla-napkin-fold) | [lerobot/smolvla_base](https://huggingface.co/lerobot/smolvla_base) | `linique-v2`. This is the 70% policy from the results table above. |
 | [xvla-linique-v2-fold-pickup](https://huggingface.co/jhimmens/xvla-linique-v2-fold-pickup) | X-VLA | `linique-v2-fold-pickup` |
 
-```python
-from lerobot.datasets.lerobot_dataset import LeRobotDataset
-
-# the full 499-episode corpus, LeRobot dataset format v3.0
-dataset = LeRobotDataset("jhimmens/linique-v2-fold-pickup")
-```
-
 Or browse it in the [dataset
 visualizer](https://huggingface.co/spaces/lerobot/visualize_dataset?path=jhimmens/linique-v2-fold-pickup)
 without downloading anything.
-
-The full corpus, the two phase splits, the force-sensing pickup set, and both models are
-Apache-2.0, so they are usable commercially and for derivative work without asking. If you train
-something better on this data, that is the point of releasing it.
-
-† These two variants are public but do not yet carry a declared license, so treat them as
-all-rights-reserved until one is added.
 
 ## Hard problems we hit (and what we learned)
 
